@@ -52,15 +52,15 @@ struct Settings: ReducerProtocol {
   struct State: Equatable { /* ... */ }
   enum Action { /* ... */ }
   
-  func reduce(
-    into state: inout State, action: Action
-  ) -> EffectTask<Action> {
-    switch action {
-    case let .isHapticFeedbackEnabledChanged(isEnabled):
-      state.isHapticFeedbackEnabled = isEnabled
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case let .isHapticFeedbackEnabledChanged(isEnabled):
+        state.isHapticFeedbackEnabled = isEnabled
+        return .none
 
-    // ...
+      // ...
+      }
     }
   }
 }
@@ -144,33 +144,33 @@ struct Settings: ReducerProtocol {
   struct State: Equatable { /* ... */ }
   enum Action { /* ... */ }
 
-  func reduce(
-    into state: inout State, action: Action
-  ) -> EffectTask<Action> {
-    switch action {
-    case let digestChanged(digest):
-      state.digest = digest
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in 
+      switch action {
+      case let digestChanged(digest):
+        state.digest = digest
+        return .none
 
-    case let displayNameChanged(displayName):
-      state.displayName = displayName
-      return .none
+      case let displayNameChanged(displayName):
+        state.displayName = displayName
+        return .none
 
-    case let enableNotificationsChanged(isOn):
-      state.enableNotifications = isOn
-      return .none
+      case let enableNotificationsChanged(isOn):
+        state.enableNotifications = isOn
+        return .none
 
-    case let protectMyPostsChanged(isOn):
-      state.protectMyPosts = isOn
-      return .none
+      case let protectMyPostsChanged(isOn):
+        state.protectMyPosts = isOn
+        return .none
 
-    case let sendEmailNotificationsChanged(isOn):
-      state.sendEmailNotifications = isOn
-      return .none
+      case let sendEmailNotificationsChanged(isOn):
+        state.sendEmailNotifications = isOn
+        return .none
 
-    case let sendMobileNotificationsChanged(isOn):
-      state.sendMobileNotifications = isOn
-      return .none
+      case let sendMobileNotificationsChanged(isOn):
+        state.sendMobileNotifications = isOn
+        return .none
+      }
     }
   }
 }

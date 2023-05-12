@@ -29,15 +29,17 @@
   /// struct Feature: ReducerProtocol {
   ///   // ...
   ///
-  ///   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-  ///     switch action {
-  ///     case .decrementButtonTapped:
-  ///       state.count -= 1
-  ///       return .none
+  ///   var body: some ReducerProtocol<State, Action> {
+  ///     Reduce { state, action in
+  ///       switch action {
+  ///       case .decrementButtonTapped:
+  ///         state.count -= 1
+  ///         return .none
   ///
-  ///     case .incrementButtonTapped:
-  ///       state.count += 1
-  ///       return .none
+  ///       case .incrementButtonTapped:
+  ///         state.count += 1
+  ///         return .none
+  ///       }
   ///     }
   ///   }
   /// }
@@ -66,31 +68,33 @@
   ///   }
   ///   enum CancelID { case timer }
   ///
-  ///   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-  ///     switch action {
-  ///     case .decrementButtonTapped:
-  ///       state.count -= 1
-  ///       return .none
+  ///   var body: some ReducerProtocol<State, Action> {
+  ///     Reduce { state, action in
+  ///       switch action {
+  ///       case .decrementButtonTapped:
+  ///         state.count -= 1
+  ///         return .none
   ///
-  ///     case .incrementButtonTapped:
-  ///       state.count += 1
-  ///       return .none
+  ///       case .incrementButtonTapped:
+  ///         state.count += 1
+  ///         return .none
   ///
-  ///     case .startTimerButtonTapped:
-  ///       return .run { send in
-  ///         while true {
-  ///           try await Task.sleep(for: .seconds(1))
-  ///           await send(.timerTick)
+  ///       case .startTimerButtonTapped:
+  ///         return .run { send in
+  ///           while true {
+  ///             try await Task.sleep(for: .seconds(1))
+  ///             await send(.timerTick)
+  ///           }
   ///         }
+  ///         .cancellable(CancelID.timer)
+  ///
+  ///       case .stopTimerButtonTapped:
+  ///         return .cancel(CancelID.timer)
+  ///
+  ///       case .timerTick:
+  ///         state.count += 1
+  ///         return .none
   ///       }
-  ///       .cancellable(CancelID.timer)
-  ///
-  ///     case .stopTimerButtonTapped:
-  ///       return .cancel(CancelID.timer)
-  ///
-  ///     case .timerTick:
-  ///       state.count += 1
-  ///       return .none
   ///     }
   ///   }
   /// }

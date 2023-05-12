@@ -29,18 +29,21 @@ extension EffectPublisher where Failure == Never {
   ///   @Dependency(\.mainQueue) var mainQueue
   ///   struct TimerID: Hashable {}
   ///
-  ///   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-  ///     switch action {
-  ///     case .startButtonTapped:
-  ///       return EffectTask.timer(id: TimerID(), every: 1, on: self.mainQueue)
-  ///         .map { _ in .timerTicked }
+  ///   var body: some ReducerProtocol<State, Action> {
+  ///     Reduce { state, action in
+  ///       switch action {
+  ///       case .startButtonTapped:
+  ///         return EffectTask.timer(id: TimerID(), every: 1, on: self.mainQueue)
+  ///           .map { _ in .timerTicked }
   ///
-  ///     case .stopButtonTapped:
-  ///       return .cancel(id: TimerID())
+  ///       case .stopButtonTapped:
+  ///         return .cancel(id: TimerID())
   ///
-  ///     case .timerTicked:
-  ///       state.count += 1
-  ///       return .none
+  ///       case .timerTicked:
+  ///         state.count += 1
+  ///         return .none
+  ///       }
+  ///     }
   ///   }
   /// }
   /// ```

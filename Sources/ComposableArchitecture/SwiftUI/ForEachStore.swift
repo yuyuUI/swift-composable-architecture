@@ -23,7 +23,9 @@ import SwiftUI
 ///     case descriptionChanged(String)
 ///   }
 ///
-///   func reduce(into state: inout State, action: Action) -> EffectTask<Action> { ... }
+///   var body: some ReducerProtocol<State, Action> {
+///     // ...
+///   }
 /// }
 /// ```
 ///
@@ -32,7 +34,9 @@ import SwiftUI
 /// ```swift
 /// struct TodoView: View {
 ///   let store: StoreOf<Todo>
-///   var body: some View { ... }
+///   var body: some View {
+///     // ...
+///   }
 /// }
 /// ```
 ///
@@ -44,7 +48,7 @@ import SwiftUI
 ///   struct State: Equatable {
 ///     var todos: IdentifiedArrayOf<Todo.State> = []
 ///   }
-///   ...
+///   // ...
 /// }
 /// ```
 ///
@@ -61,7 +65,7 @@ import SwiftUI
 /// ```swift
 /// var body: some ReducerProtocol<State, Action> {
 ///   Reduce { state, action in
-///     ...
+///     // ...
 ///   }
 ///   .forEach(\.todos, action: /Action.todo(id:action:)) {
 ///     Todo()

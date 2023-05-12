@@ -24,14 +24,16 @@ struct Feature: ReducerProtocol {
   struct State: Equatable { var count = 0 }
   enum Action { case incrementButtonTapped, decrementButtonTapped }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .incrementButtonTapped:
-      state.count += 1
-      return .none
-    case .decrementButtonTapped:
-      state.count -= 1
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .incrementButtonTapped:
+        state.count += 1
+        return .none
+      case .decrementButtonTapped:
+        state.count -= 1
+        return .none
+      }
     }
   }
 }
@@ -195,20 +197,22 @@ struct Feature: ReducerProtocol {
   struct State: Equatable { var count = 0 }
   enum Action { case startTimerButtonTapped, timerTick }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .startTimerButtonTapped:
-      state.count = 0
-      return .run { send in
-        for _ in 1...5 {
-          try await Task.sleep(for: .seconds(1))
-          await send(.timerTick)
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .startTimerButtonTapped:
+        state.count = 0
+        return .run { send in
+          for _ in 1...5 {
+            try await Task.sleep(for: .seconds(1))
+            await send(.timerTick)
+          }
         }
-      }
 
-    case .timerTick:
-      state.count += 1
-      return .none
+      case .timerTick:
+        state.count += 1
+        return .none
+      }
     }
   }
 }
@@ -671,11 +675,13 @@ the following simple reducer that appends a new model to an array when an action
 struct Feature: ReducerProtocol {
   struct State: Equatable { var values: [Model] = [] }
   enum Action { case addButtonTapped }
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .addButtonTapped:
-      state.values.append(Model()
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .addButtonTapped:
+        state.values.append(Model())
+        return .none
+      }
     }
   }
 }
@@ -740,11 +746,13 @@ And then move the responsibility of generating new IDs to the reducer:
 struct Feature: ReducerProtocol {
   // ...
   @Dependency(\.uuid) var uuid
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .addButtonTapped:
-      state.values.append(Model(id: self.uuid()))
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .addButtonTapped:
+        state.values.append(Model(id: self.uuid()))
+        return .none
+      }
     }
   }
 }

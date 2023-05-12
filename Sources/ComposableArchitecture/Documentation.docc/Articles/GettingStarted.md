@@ -103,9 +103,10 @@ execute effects, and they can return `.none` to represent that:
 struct Feature: ReducerProtocol {
   struct State: Equatable { … }
   enum Action: Equatable { … }
-  
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
+
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
       case .factAlertDismissed:
         state.numberFactAlert = nil
         return .none

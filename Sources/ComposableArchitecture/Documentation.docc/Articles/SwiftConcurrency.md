@@ -27,17 +27,19 @@ struct Feature: ReducerProtocol {
   struct State { /* ... */ }
   enum Action { /* ... */ }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .buttonTapped:
-      return .run { send in
-        try await Task.sleep(for: .seconds(1))
-        await send(.delayed(state.count))
-        // 🛑 Mutable capture of 'inout' parameter 'state' is
-        //    not allowed in concurrently-executing code
-      }
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .buttonTapped:
+        return .run { send in
+          try await Task.sleep(for: .seconds(1))
+          await send(.delayed(state.count))
+          // 🛑 Mutable capture of 'inout' parameter 'state' is
+          //    not allowed in concurrently-executing code
+        }
 
-      // ...
+        // ...
+      }
     }
   }
 }

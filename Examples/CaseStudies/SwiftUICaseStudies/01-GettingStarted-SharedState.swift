@@ -88,33 +88,35 @@ struct SharedState: ReducerProtocol {
       case isPrimeButtonTapped
     }
 
-    func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-      switch action {
-      case .alertDismissed:
-        state.alert = nil
-        return .none
+    var body: some ReducerProtocol<State, Action> {
+      Reduce { state, action in
+        switch action {
+        case .alertDismissed:
+          state.alert = nil
+          return .none
 
-      case .decrementButtonTapped:
-        state.count -= 1
-        state.numberOfCounts += 1
-        state.minCount = min(state.minCount, state.count)
-        return .none
+        case .decrementButtonTapped:
+          state.count -= 1
+          state.numberOfCounts += 1
+          state.minCount = min(state.minCount, state.count)
+          return .none
 
-      case .incrementButtonTapped:
-        state.count += 1
-        state.numberOfCounts += 1
-        state.maxCount = max(state.maxCount, state.count)
-        return .none
+        case .incrementButtonTapped:
+          state.count += 1
+          state.numberOfCounts += 1
+          state.maxCount = max(state.maxCount, state.count)
+          return .none
 
-      case .isPrimeButtonTapped:
-        state.alert = AlertState {
-          TextState(
-            isPrime(state.count)
-              ? "👍 The number \(state.count) is prime!"
-              : "👎 The number \(state.count) is not prime :("
-          )
+        case .isPrimeButtonTapped:
+          state.alert = AlertState {
+            TextState(
+              isPrime(state.count)
+                ? "👍 The number \(state.count) is prime!"
+                : "👎 The number \(state.count) is not prime :("
+            )
+          }
+          return .none
         }
-        return .none
       }
     }
   }
@@ -140,11 +142,13 @@ struct SharedState: ReducerProtocol {
       case resetCounterButtonTapped
     }
 
-    func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-      switch action {
-      case .resetCounterButtonTapped:
-        state.resetCount()
-        return .none
+    var body: some ReducerProtocol<State, Action> {
+      Reduce { state, action in
+        switch action {
+        case .resetCounterButtonTapped:
+          state.resetCount()
+          return .none
+        }
       }
     }
   }

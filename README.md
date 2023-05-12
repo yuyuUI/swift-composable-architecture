@@ -148,18 +148,19 @@ struct Feature: ReducerProtocol {
 }
 ```
 
-And then we implement the `reduce` method which is responsible for handling the actual logic and 
-behavior for the feature. It describes how to change the current state to the next state, and 
-describes what effects need to be executed. Some actions don't need to execute effects, and they 
-can return `.none` to represent that:
+And then we implement the `body` of the reducer, which is responsible for handling the actual logic
+and behavior for the feature. In it, we can define a `Reduce` reducer, which describes how to change
+the current state to the next state, and describes what effects need to be executed. Some actions
+don't need to execute effects, and they can return `.none` to represent that:
 
 ```swift
 struct Feature: ReducerProtocol {
   struct State: Equatable { … }
   enum Action: Equatable { … }
-  
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
+
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
       case .factAlertDismissed:
         state.numberFactAlert = nil
         return .none
@@ -194,6 +195,7 @@ struct Feature: ReducerProtocol {
       case .numberFactResponse(.failure):
         state.numberFactAlert = "Could not load a number fact :("
         return .none
+      }
     }
   }
 }

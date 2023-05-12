@@ -29,28 +29,30 @@ public struct Game: ReducerProtocol {
 
   public init() {}
 
-  public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case let .cellTapped(row, column):
-      guard
-        state.board[row][column] == nil,
-        !state.board.hasWinner
-      else { return .none }
-
-      state.board[row][column] = state.currentPlayer
-
-      if !state.board.hasWinner {
-        state.currentPlayer.toggle()
+  public var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case let .cellTapped(row, column):
+        guard
+          state.board[row][column] == nil,
+          !state.board.hasWinner
+        else { return .none }
+        
+        state.board[row][column] = state.currentPlayer
+        
+        if !state.board.hasWinner {
+          state.currentPlayer.toggle()
+        }
+        
+        return .none
+        
+      case .playAgainButtonTapped:
+        state = Game.State(oPlayerName: state.oPlayerName, xPlayerName: state.xPlayerName)
+        return .none
+        
+      case .quitButtonTapped:
+        return .none
       }
-
-      return .none
-
-    case .playAgainButtonTapped:
-      state = Game.State(oPlayerName: state.oPlayerName, xPlayerName: state.xPlayerName)
-      return .none
-
-    case .quitButtonTapped:
-      return .none
     }
   }
 }

@@ -328,18 +328,20 @@ public final class ViewStore<ViewState, ViewAction>: ObservableObject {
   ///   }
   ///   @Dependency(\.fetch) var fetch
   ///
-  ///   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-  ///     switch action {
-  ///     case .pulledToRefresh:
-  ///       state.isLoading = true
-  ///       return .run { send in
-  ///         await send(.receivedResponse(TaskResult { try await self.fetch() }))
-  ///       }
+  ///   var body: some ReducerProtocol<State, Action> {
+  ///     Reduce { state, action in
+  ///       switch action {
+  ///       case .pulledToRefresh:
+  ///         state.isLoading = true
+  ///         return .run { send in
+  ///           await send(.receivedResponse(TaskResult { try await self.fetch() }))
+  ///         }
   ///
-  ///     case let .receivedResponse(result):
-  ///       state.isLoading = false
-  ///       state.response = try? result.value
-  ///       return .none
+  ///       case let .receivedResponse(result):
+  ///         state.isLoading = false
+  ///         state.response = try? result.value
+  ///         return .none
+  ///       }
   ///     }
   ///   }
   /// }

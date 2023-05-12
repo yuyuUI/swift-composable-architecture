@@ -10,17 +10,19 @@ struct ForEachBindingTestCase: ReducerProtocol {
     case removeLast
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case let .change(offset: offset, value: value):
-      state.values[offset] = value
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case let .change(offset: offset, value: value):
+        state.values[offset] = value
+        return .none
 
-    case .removeLast:
-      guard !state.values.isEmpty
-      else { return .none }
-      state.values.removeLast()
-      return .none
+      case .removeLast:
+        guard !state.values.isEmpty
+        else { return .none }
+        state.values.removeLast()
+        return .none
+      }
     }
   }
 }

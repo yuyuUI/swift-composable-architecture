@@ -39,52 +39,54 @@ struct VoiceMemo: ReducerProtocol {
   @Dependency(\.continuousClock) var clock
   private enum CancelID { case play }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .audioPlayerClient:
-      state.mode = .notPlaying
-      return .cancel(id: CancelID.play)
-
-    case .delete:
-      return .cancel(id: CancelID.play)
-
-    case .playButtonTapped:
-      switch state.mode {
-      case .notPlaying:
-        state.mode = .playing(progress: 0)
-
-        return .run { [url = state.url] send in
-          async let playAudio: Void = send(
-            .audioPlayerClient(TaskResult { try await self.audioPlayer.play(url) })
-          )
-
-          var start: TimeInterval = 0
-          for await _ in self.clock.timer(interval: .milliseconds(500)) {
-            start += 0.5
-            await send(.timerUpdated(start))
-          }
-
-          await playAudio
-        }
-        .cancellable(id: CancelID.play, cancelInFlight: true)
-
-      case .playing:
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .audioPlayerClient:
         state.mode = .notPlaying
         return .cancel(id: CancelID.play)
+        
+      case .delete:
+        return .cancel(id: CancelID.play)
+        
+      case .playButtonTapped:
+        switch state.mode {
+        case .notPlaying:
+          state.mode = .playing(progress: 0)
+          
+          return .run { [url = state.url] send in
+            async let playAudio: Void = send(
+              .audioPlayerClient(TaskResult { try await self.audioPlayer.play(url) })
+            )
+            
+            var start: TimeInterval = 0
+            for await _ in self.clock.timer(interval: .milliseconds(500)) {
+              start += 0.5
+              await send(.timerUpdated(start))
+            }
+            
+            await playAudio
+          }
+          .cancellable(id: CancelID.play, cancelInFlight: true)
+          
+        case .playing:
+          state.mode = .notPlaying
+          return .cancel(id: CancelID.play)
+        }
+        
+      case let .timerUpdated(time):
+        switch state.mode {
+        case .notPlaying:
+          break
+        case .playing:
+          state.mode = .playing(progress: time / state.duration)
+        }
+        return .none
+        
+      case let .titleTextFieldChanged(text):
+        state.title = text
+        return .none
       }
-
-    case let .timerUpdated(time):
-      switch state.mode {
-      case .notPlaying:
-        break
-      case .playing:
-        state.mode = .playing(progress: time / state.duration)
-      }
-      return .none
-
-    case let .titleTextFieldChanged(text):
-      state.title = text
-      return .none
     }
   }
 }

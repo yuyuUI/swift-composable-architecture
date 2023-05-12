@@ -37,58 +37,60 @@ struct AlertAndConfirmationDialog: ReducerProtocol {
     case incrementButtonTapped
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .alertButtonTapped:
-      state.alert = AlertState {
-        TextState("Alert!")
-      } actions: {
-        ButtonState(role: .cancel) {
-          TextState("Cancel")
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .alertButtonTapped:
+        state.alert = AlertState {
+          TextState("Alert!")
+        } actions: {
+          ButtonState(role: .cancel) {
+            TextState("Cancel")
+          }
+          ButtonState(action: .incrementButtonTapped) {
+            TextState("Increment")
+          }
+        } message: {
+          TextState("This is an alert")
         }
-        ButtonState(action: .incrementButtonTapped) {
-          TextState("Increment")
+        return .none
+        
+      case .alertDismissed:
+        state.alert = nil
+        return .none
+        
+      case .confirmationDialogButtonTapped:
+        state.confirmationDialog = ConfirmationDialogState {
+          TextState("Confirmation dialog")
+        } actions: {
+          ButtonState(role: .cancel) {
+            TextState("Cancel")
+          }
+          ButtonState(action: .incrementButtonTapped) {
+            TextState("Increment")
+          }
+          ButtonState(action: .decrementButtonTapped) {
+            TextState("Decrement")
+          }
+        } message: {
+          TextState("This is a confirmation dialog.")
         }
-      } message: {
-        TextState("This is an alert")
+        return .none
+        
+      case .confirmationDialogDismissed:
+        state.confirmationDialog = nil
+        return .none
+        
+      case .decrementButtonTapped:
+        state.alert = AlertState { TextState("Decremented!") }
+        state.count -= 1
+        return .none
+        
+      case .incrementButtonTapped:
+        state.alert = AlertState { TextState("Incremented!") }
+        state.count += 1
+        return .none
       }
-      return .none
-
-    case .alertDismissed:
-      state.alert = nil
-      return .none
-
-    case .confirmationDialogButtonTapped:
-      state.confirmationDialog = ConfirmationDialogState {
-        TextState("Confirmation dialog")
-      } actions: {
-        ButtonState(role: .cancel) {
-          TextState("Cancel")
-        }
-        ButtonState(action: .incrementButtonTapped) {
-          TextState("Increment")
-        }
-        ButtonState(action: .decrementButtonTapped) {
-          TextState("Decrement")
-        }
-      } message: {
-        TextState("This is a confirmation dialog.")
-      }
-      return .none
-
-    case .confirmationDialogDismissed:
-      state.confirmationDialog = nil
-      return .none
-
-    case .decrementButtonTapped:
-      state.alert = AlertState { TextState("Decremented!") }
-      state.count -= 1
-      return .none
-
-    case .incrementButtonTapped:
-      state.alert = AlertState { TextState("Incremented!") }
-      state.count += 1
-      return .none
     }
   }
 }

@@ -24,63 +24,65 @@ struct DownloadComponent: ReducerProtocol {
 
   @Dependency(\.downloadClient) var downloadClient
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .alert(.deleteButtonTapped):
-      state.alert = nil
-      state.mode = .notDownloaded
-      return .none
-
-    case .alert(.nevermindButtonTapped),
-      .alert(.dismissed):
-      state.alert = nil
-      return .none
-
-    case .alert(.stopButtonTapped):
-      state.mode = .notDownloaded
-      state.alert = nil
-      return .cancel(id: state.id)
-
-    case .buttonTapped:
-      switch state.mode {
-      case .downloaded:
-        state.alert = deleteAlert
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .alert(.deleteButtonTapped):
+        state.alert = nil
+        state.mode = .notDownloaded
         return .none
-
-      case .downloading:
-        state.alert = stopAlert
+        
+      case .alert(.nevermindButtonTapped),
+          .alert(.dismissed):
+        state.alert = nil
         return .none
-
-      case .notDownloaded:
-        state.mode = .startingToDownload
-
-        return .run { [url = state.url] send in
-          for try await event in self.downloadClient.download(url) {
-            await send(.downloadClient(.success(event)), animation: .default)
+        
+      case .alert(.stopButtonTapped):
+        state.mode = .notDownloaded
+        state.alert = nil
+        return .cancel(id: state.id)
+        
+      case .buttonTapped:
+        switch state.mode {
+        case .downloaded:
+          state.alert = deleteAlert
+          return .none
+          
+        case .downloading:
+          state.alert = stopAlert
+          return .none
+          
+        case .notDownloaded:
+          state.mode = .startingToDownload
+          
+          return .run { [url = state.url] send in
+            for try await event in self.downloadClient.download(url) {
+              await send(.downloadClient(.success(event)), animation: .default)
+            }
+          } catch: { error, send in
+            await send(.downloadClient(.failure(error)), animation: .default)
           }
-        } catch: { error, send in
-          await send(.downloadClient(.failure(error)), animation: .default)
+          .cancellable(id: state.id)
+          
+        case .startingToDownload:
+          state.alert = stopAlert
+          return .none
         }
-        .cancellable(id: state.id)
-
-      case .startingToDownload:
-        state.alert = stopAlert
+        
+      case .downloadClient(.success(.response)):
+        state.mode = .downloaded
+        state.alert = nil
+        return .none
+        
+      case let .downloadClient(.success(.updateProgress(progress))):
+        state.mode = .downloading(progress: progress)
+        return .none
+        
+      case .downloadClient(.failure):
+        state.mode = .notDownloaded
+        state.alert = nil
         return .none
       }
-
-    case .downloadClient(.success(.response)):
-      state.mode = .downloaded
-      state.alert = nil
-      return .none
-
-    case let .downloadClient(.success(.updateProgress(progress))):
-      state.mode = .downloading(progress: progress)
-      return .none
-
-    case .downloadClient(.failure):
-      state.mode = .notDownloaded
-      state.alert = nil
-      return .none
     }
   }
 

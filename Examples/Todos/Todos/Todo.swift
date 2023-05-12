@@ -13,15 +13,17 @@ struct Todo: ReducerProtocol {
     case textFieldChanged(String)
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .checkBoxToggled:
-      state.isComplete.toggle()
-      return .none
-
-    case let .textFieldChanged(description):
-      state.description = description
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .checkBoxToggled:
+        state.isComplete.toggle()
+        return .none
+        
+      case let .textFieldChanged(description):
+        state.description = description
+        return .none
+      }
     }
   }
 }

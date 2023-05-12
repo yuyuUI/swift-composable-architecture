@@ -232,24 +232,26 @@ struct Feature: ReducerProtocol {
     // ...
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .buttonTapped:
-      state.count += 1
-      return .send(.sharedComputation)
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .buttonTapped:
+        state.count += 1
+        return .send(.sharedComputation)
 
-    case .toggleChanged:
-      state.isEnabled.toggle()
-      return .send(.sharedComputation)
+      case .toggleChanged:
+        state.isEnabled.toggle()
+        return .send(.sharedComputation)
 
-    case let .textFieldChanged(text):
-      state.description = text
-      return .send(.sharedComputation)
+      case let .textFieldChanged(text):
+        state.description = text
+        return .send(.sharedComputation)
 
-    case .sharedComputation:
-      // Some shared work to compute something.
-      return .run { send in
-        // A shared effect to compute something
+      case .sharedComputation:
+        // Some shared work to compute something
+        return .run { send in
+          // A shared effect to compute something
+        }
       }
     }
   }
@@ -313,24 +315,26 @@ struct Feature: ReducerProtocol {
     // ...
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .buttonTapped:
-      state.count += 1
-      return self.sharedComputation(state: &state)
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .buttonTapped:
+        state.count += 1
+        return self.sharedComputation(state: &state)
 
-    case .toggleChanged:
-      state.isEnabled.toggle()
-      return self.sharedComputation(state: &state)
+      case .toggleChanged:
+        state.isEnabled.toggle()
+        return self.sharedComputation(state: &state)
 
-    case let .textFieldChanged(text):
-      state.description = text
-      return self.sharedComputation(state: &state)
+      case let .textFieldChanged(text):
+        state.description = text
+        return self.sharedComputation(state: &state)
+      }
     }
   }
 
   func sharedComputation(state: inout State) -> EffectTask<Action> {
-    // Some shared work to compute something.
+    // Some shared work to compute something
     return .run { send in
       // A shared effect to compute something
     }

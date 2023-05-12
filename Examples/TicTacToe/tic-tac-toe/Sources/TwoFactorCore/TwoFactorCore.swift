@@ -29,38 +29,40 @@ public struct TwoFactor: ReducerProtocol, Sendable {
 
   public init() {}
 
-  public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-    switch action {
-    case .alertDismissed:
-      state.alert = nil
-      return .none
-
-    case let .codeChanged(code):
-      state.code = code
-      state.isFormValid = code.count >= 4
-      return .none
-
-    case .submitButtonTapped:
-      state.isTwoFactorRequestInFlight = true
-      return .run { [code = state.code, token = state.token] send in
-        await send(
-          .twoFactorResponse(
-            TaskResult {
-              try await self.authenticationClient.twoFactor(.init(code: code, token: token))
-            }
+  public var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .alertDismissed:
+        state.alert = nil
+        return .none
+        
+      case let .codeChanged(code):
+        state.code = code
+        state.isFormValid = code.count >= 4
+        return .none
+        
+      case .submitButtonTapped:
+        state.isTwoFactorRequestInFlight = true
+        return .run { [code = state.code, token = state.token] send in
+          await send(
+            .twoFactorResponse(
+              TaskResult {
+                try await self.authenticationClient.twoFactor(.init(code: code, token: token))
+              }
+            )
           )
-        )
+        }
+        .cancellable(id: CancelID.tearDown)
+        
+      case let .twoFactorResponse(.failure(error)):
+        state.alert = AlertState { TextState(error.localizedDescription) }
+        state.isTwoFactorRequestInFlight = false
+        return .none
+        
+      case .twoFactorResponse(.success):
+        state.isTwoFactorRequestInFlight = false
+        return .none
       }
-      .cancellable(id: CancelID.tearDown)
-
-    case let .twoFactorResponse(.failure(error)):
-      state.alert = AlertState { TextState(error.localizedDescription) }
-      state.isTwoFactorRequestInFlight = false
-      return .none
-
-    case .twoFactorResponse(.success):
-      state.isTwoFactorRequestInFlight = false
-      return .none
     }
   }
 }
