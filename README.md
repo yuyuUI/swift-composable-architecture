@@ -137,13 +137,13 @@ when we receive a response from the fact API request:
 
 ```swift
 struct Feature: ReducerProtocol {
-  struct State: Equatable { … }
+  struct State: Equatable { /* ... */ }
   enum Action: Equatable {
     case factAlertDismissed
     case decrementButtonTapped
     case incrementButtonTapped
     case numberFactButtonTapped
-    case numberFactResponse(TaskResult<String>)
+    case numberFactResponse(String)
   }
 }
 ```
@@ -155,8 +155,8 @@ don't need to execute effects, and they can return `.none` to represent that:
 
 ```swift
 struct Feature: ReducerProtocol {
-  struct State: Equatable { … }
-  enum Action: Equatable { … }
+  struct State: Equatable { /* ... */ }
+  enum Action: Equatable { /* ... */ }
 
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
@@ -175,25 +175,14 @@ struct Feature: ReducerProtocol {
 
       case .numberFactButtonTapped:
         return .run { [count = state.count] send in
-          await send(
-            .numberFactResponse(
-              TaskResult {
-                String(
-                  decoding: try await URLSession.shared
-                    .data(from: URL(string: "http://numbersapi.com/\(count)/trivia")!).0,
-                  as: UTF8.self
-                )
-              }
-            )
-          )
+          let (data, _) = try await URLSession.shared
+            .data(from: URL(string: "http://numbersapi.com/\(count)/trivia")!)
+          let fact = String(decoding: data, as: UTF8.self)
+          await send(.numberFactResponse(fact))
         }
 
-      case let .numberFactResponse(.success(fact)):
+      case let .numberFactResponse(fact):
         state.numberFactAlert = fact
-        return .none
-
-      case .numberFactResponse(.failure):
-        state.numberFactAlert = "Could not load a number fact :("
         return .none
       }
     }
@@ -369,7 +358,7 @@ receive a fact response back with the fact, which then causes the alert to show:
 ```swift
 await store.send(.numberFactButtonTapped)
 
-await store.receive(.numberFactResponse(.success(???))) {
+await store.receive(.numberFactResponse(???)) {
   $0.numberFactAlert = ???
 }
 ```
@@ -387,7 +376,7 @@ do this by adding a property to the `Feature` reducer:
 ```swift
 struct Feature: ReducerProtocol {
   let numberFact: (Int) async throws -> String
-  …
+  // ...
 }
 ```
 
@@ -396,9 +385,7 @@ Then we can use it in the `reduce` implementation:
 ```swift
 case .numberFactButtonTapped:
   return .run { [count = state.count] send in 
-    await send(
-      .numberFactResponse(TaskResult { try await self.numberFact(count) })
-    )
+    try await send(.numberFactResponse(self.numberFact(count) }))
   }
 ```
 
@@ -444,7 +431,7 @@ the alert:
 ```swift
 await store.send(.numberFactButtonTapped)
 
-await store.receive(.numberFactResponse(.success("0 is a good number Brent"))) {
+await store.receive(.numberFactResponse("0 is a good number Brent")) {
   $0.numberFactAlert = "0 is a good number Brent"
 }
 
@@ -500,7 +487,7 @@ any feature by using the `@Dependency` property wrapper:
 -  let numberFact: (Int) async throws -> String
 +  @Dependency(\.numberFact) var numberFact
    
-   …
+   // ...
 
 -  try await self.numberFact(count)
 +  try await self.numberFact.fetch(count)
@@ -537,7 +524,7 @@ let store = TestStore(initialState: Feature.State()) {
   $0.numberFact.fetch = { "\($0) is a good number Brent" }
 }
 
-…
+// ...
 ```
 
 That is the basics of building and testing a feature in the Composable Architecture. There are 

@@ -64,8 +64,8 @@ You can convert this to the protocol style by:
 `Action`.
 1. Move the fields on the environment to be fields on this new reducer type, and delete the 
 environment type.
-1. Move the reducer's closure implementation to the ``ReducerProtocol/reduce(into:action:)-8yinq`` 
-method.
+1. Move the reducer's closure implementation to a ``Reduce`` in the conformance's
+``ReducerProtocol/body-swift.property-97ymy`` property.
 
 Performing these 4 steps on the feature produces the following:
 
@@ -232,7 +232,7 @@ let appReducer = Reducer<
 
 To convert this to the protocol-style we again introduce a new type that conforms to the 
 ``ReducerProtocol``, we nest the domain types inside the conformance, we inline the environment
-fields, but this time we use the ``ReducerProtocol/body-swift.property-7foai`` requirement of the
+fields, but this time we use the ``ReducerProtocol/body-swift.property-97ymy`` requirement of the
 protocol to describe how to compose multiple reducers:
 
 ```swift

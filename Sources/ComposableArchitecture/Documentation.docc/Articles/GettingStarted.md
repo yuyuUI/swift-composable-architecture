@@ -83,26 +83,27 @@ when we receive a response from the fact API request:
 
 ```swift
 struct Feature: ReducerProtocol {
-  struct State: Equatable { … }
+  struct State: Equatable { /* ... */ }
   enum Action: Equatable {
     case factAlertDismissed
     case decrementButtonTapped
     case incrementButtonTapped
     case numberFactButtonTapped
-    case numberFactResponse(TaskResult<String>)
+    case numberFactResponse(String)
   }
 }
 ```
 
-And then we implement the ``ReducerProtocol/reduce(into:action:)-8yinq`` method which is responsible 
-for handling the actual logic and  behavior for the feature. It describes how to change the current 
-state to the next state, and describes what effects need to be executed. Some actions don't need to 
-execute effects, and they can return `.none` to represent that:
+And then we implement the ``ReducerProtocol/body-swift.property-97ymy`` property which is
+responsible for handling the actual logic and  behavior for the feature. In it we can define a
+``Reduce`` reducer that describes how to change the current state to the next state, and describes
+what effects need to be executed. Some actions don't need to execute effects, and they can return
+`.none` to represent that:
 
 ```swift
 struct Feature: ReducerProtocol {
-  struct State: Equatable { … }
-  enum Action: Equatable { … }
+  struct State: Equatable { /* ... */ }
+  enum Action: Equatable { /* ... */ }
 
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
@@ -121,25 +122,14 @@ struct Feature: ReducerProtocol {
 
       case .numberFactButtonTapped:
         return .run { [count = state.count] send in
-          await send(
-            .numberFactResponse(
-              TaskResult { 
-                String(
-                  decoding: try await URLSession.shared
-                    .data(from: URL(string: "http://numbersapi.com/\(count)/trivia")!).0,
-                  as: UTF8.self
-                )
-              }
-            )
-          )
+          let (data, _) = try await URLSession.shared
+            .data(from: URL(string: "http://numbersapi.com/\(count)/trivia")!)
+          let fact = String(decoding: data, as: UTF8.self)
+          await send(.numberFactResponse(fact))
         }
 
-      case let .numberFactResponse(.success(fact)):
+      case let .numberFactResponse(fact):
         state.numberFactAlert = fact
-        return .none
-
-      case .numberFactResponse(.failure):
-        state.numberFactAlert = "Could not load a number fact :("
         return .none
       } 
     }
@@ -305,7 +295,7 @@ receive a fact response back with the fact, which then causes the alert to show:
 ```swift
 await store.send(.numberFactButtonTapped)
 
-await store.receive(.numberFactResponse(.success("???"))) {
+await store.receive(.numberFactResponse("???")) {
   $0.numberFactAlert = "???"
 }
 ```
@@ -323,7 +313,7 @@ can do this by adding a property to the `Feature` reducer:
 ```swift
 struct Feature: ReducerProtocol {
   let numberFact: (Int) async throws -> String
-  …
+  // ...
 }
 ```
 
@@ -332,9 +322,7 @@ Then we can use it in the `reduce` implementation:
 ```swift
 case .numberFactButtonTapped:
   return .run { [count = state.count] send in 
-    await send(
-      .numberFactResponse(TaskResult { try await self.numberFact(count) })
-    )
+    try await send(.factResponse(self.numberFact(count)))
   }
 ```
 
@@ -378,7 +366,7 @@ the alert:
 ```swift
 await store.send(.numberFactButtonTapped)
 
-await store.receive(.numberFactResponse(.success("0 is a good number Brent"))) {
+await store.receive(.numberFactResponse("0 is a good number Brent")) {
   $0.numberFactAlert = "0 is a good number Brent"
 }
 
@@ -429,10 +417,10 @@ any feature:
 
 ```swift
 struct Feature: ReducerProtocol {
-  struct State { … }
-  enum Action { … }
+  struct State { /* ... */ }
+  enum Action { /* ... */ }
   @Dependency(\.numberFact) var numberFact
-  …
+  // ...
 }
 ```
 
@@ -467,7 +455,7 @@ let store = TestStore(initialState: Feature.State()) {
 }
 
 await store.send(.numberFactButtonTapped)
-await store.receive(.numberFactResponse(.success("0 is a good number Brent"))) {
+await store.receive(.numberFactResponse("0 is a good number Brent")) {
   $0.numberFactAlert = "0 is a good number Brent"
 }
 ```
