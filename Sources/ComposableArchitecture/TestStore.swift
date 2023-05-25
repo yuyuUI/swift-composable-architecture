@@ -889,6 +889,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         """
         An effect returned for this action is still running. It must complete before the end of \
         the test. …
+        effect description: \(effect.action.description)
 
         To fix, inspect any effects the reducer returns for this action and ensure that all of \
         them complete by the end of the test. There are a few reasons why an effect may not have \
@@ -2406,6 +2407,14 @@ class TestReducer<State, Action>: ReducerProtocol {
     let origin: Origin
     let file: StaticString
     let line: UInt
+    var description: String {
+      switch origin {
+      case let .receive(action):
+        return "by receive \(action)"
+      case let .send(action):
+        return "by send \(action)"
+      }
+    }
 
     enum Origin {
       case receive(Action)
